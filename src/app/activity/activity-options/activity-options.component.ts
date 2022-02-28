@@ -1,11 +1,7 @@
-import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
-import { Point } from 'ol/geom';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { getDistance } from 'ol/sphere';
 import { Activity, ActivityPoint, RawActivity, RawActivityPoint } from '../activity';
-
-export interface ActivitySettingsChange {
-  activity: Activity;
-}
+import { ActivitySettings } from '../activity-settings';
 
 @Component({
   selector: 'app-activity-options',
@@ -15,7 +11,7 @@ export interface ActivitySettingsChange {
 export class ActivityOptionsComponent implements OnInit {
 
   @Output()
-  activitySettingsChange = new EventEmitter<ActivitySettingsChange>();
+  activitySettingsChange = new EventEmitter<ActivitySettings>();
 
   activity: Activity;
 
@@ -64,8 +60,8 @@ export class ActivityOptionsComponent implements OnInit {
         const time = this.convertIsoDateToSeconds(trkpt.getElementsByTagName('time')[0].textContent);
         points.push({
           timeSinceStart: time - firstTime,
-          lat: parseFloat(trkpt.getAttribute('lon')),
-          lon: parseFloat(trkpt.getAttribute('lat')),
+          lat: parseFloat(trkpt.getAttribute('lat')),
+          lon: parseFloat(trkpt.getAttribute('lon')),
         });
       }
     }

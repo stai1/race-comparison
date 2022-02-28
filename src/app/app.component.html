@@ -1,1 +1,8 @@
-<app-activity-options></app-activity-options>
+<div class="layout">
+  <div class="activity-options">
+    <app-activity-options (activitySettingsChange)="onLeftActivitySettingsChange($event)"></app-activity-options>
+  </div>
+  <div class='activity-map single'>
+    <app-activity-map [activitySettingsChanges]="activitySettingsChanges"></app-activity-map>
+  </div>
+</div>
