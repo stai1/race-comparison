@@ -1,0 +1,9 @@
+<button (click)="fileInput.click()">
+  Import Activity
+</button>
+<input #fileInput class="file-input" type="file" accept=".gpx,.tcx"
+  (change)="onFileSelected($event)"
+>
+<h2>
+  {{ activity?.name }}
+</h2>
