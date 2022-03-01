@@ -1,14 +1,27 @@
 <div class="layout">
   <div class="left">
     <div class="maps">
-      <div class='activity-map single'>
-        <app-activity-map [activitySettingsChanges]="activitySettingsChanges"></app-activity-map>
-      </div>
+      <ng-container *ngIf="canDisplaySeparateMaps; else singleMap">
+        <ng-container *ngFor="let activitySettingsChange of activitySettingsChanges; let i = index">
+          <div *ngIf="hasActivity(i)" class="activity-map">
+            <app-activity-map [activitySettingsChanges]="[activitySettingsChange]"></app-activity-map>
+          </div>
+        </ng-container>
+      </ng-container>
+      <ng-template #singleMap>
+        <div class="activity-map">
+          <app-activity-map [activitySettingsChanges]="activitySettingsChanges"></app-activity-map>
+        </div>
+      </ng-template>
     </div>
     <div class="charts">
     </div>
   </div>
   <div class="right">
+    <div>
+      <input (change)="onDisplaySeparateMapsChange($event)" type="checkbox">
+      Display activities on separate maps
+    </div>
     <div *ngFor="let activitySettingsChange$ of activitySettingsChanges; let i = index" class="activity-options">
       <app-activity-options (activitySettingsChange)="onActivitySettingsChange($event, i)"></app-activity-options>
     </div>

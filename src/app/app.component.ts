@@ -24,7 +24,48 @@ export class AppComponent {
     }
   );
 
-  onActivitySettingsChange(activitySettingsChange: ActivitySettings, index: number) {
+  /**
+   * Whether to display activities on separate maps
+   */
+  displaySeparateMaps: boolean = false;
+
+  /**
+   * Callback for settings change
+   * @param activitySettingsChange 
+   * @param index 
+   */
+  onActivitySettingsChange(activitySettingsChange: ActivitySettings, index: number): void {
     this.activitySettingsChangeSubjects[index].next(activitySettingsChange);
+  }
+
+  /**
+   * Callback for checkbox
+   * @param event 
+   */
+  onDisplaySeparateMapsChange(event): void {
+    this.displaySeparateMaps = (<HTMLInputElement>event.target).checked;
+  }
+
+  /**
+   * Whether there is an activity loaded at an index
+   * @param index 
+   */
+  hasActivity(index: number): boolean {
+    return !!this.activitySettingsChangeSubjects[index].value;
+  }
+
+  get canDisplaySeparateMaps(): boolean {
+    if(this.displaySeparateMaps) {
+      let found = 0;
+      for(let activitySettingsChange of this.activitySettingsChangeSubjects) {
+        if(activitySettingsChange.value) {
+          if(found === 1) {
+            return true;
+          }
+          ++found;
+        }
+      }
+    }
+    return false;
   }
 }

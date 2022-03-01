@@ -1,5 +1,5 @@
-import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { Component, ElementRef, Input, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { delay, Observable, Subject, takeUntil } from 'rxjs';
 import { Map as OlMap, View, Feature } from 'ol';
 import { Geometry, LineString, Point } from 'ol/geom'
 import {
@@ -30,7 +30,7 @@ export class ActivityMapComponent implements OnInit {
   activitySettingsChanges: Observable<ActivitySettings>[] = [];
 
   @ViewChild('map')
-  private mapElement: ElementRef<HTMLDivElement>;
+  private mapElementRef: ElementRef<HTMLDivElement>;
 
   private activitySettingsList: ActivitySettings[];
 
@@ -38,13 +38,22 @@ export class ActivityMapComponent implements OnInit {
 
   private destroyed = new Subject<void>();
 
+  private changed = new Subject<void>();
+
   private lineStrings: Feature<LineString>[];
 
   private lineStringLayerSource: VectorSource<Geometry> = new VectorSource({wrapX: true});
 
-  constructor() { }
+  constructor(
+  ) { }
 
   ngOnInit(): void {
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if('activitySettingsChanges' in changes) {
+      this.changed.next();
+    }
   }
 
   ngAfterViewInit(): void {
@@ -60,7 +69,7 @@ export class ActivityMapComponent implements OnInit {
   initMap(): void {
     const mapSource = new OSM();
     this.map = new OlMap({
-      target: this.mapElement.nativeElement,
+      target: this.mapElementRef.nativeElement,
       layers: [
         new TileLayer({source: mapSource}),
         new VectorLayer({ source: this.lineStringLayerSource }),
@@ -90,13 +99,14 @@ export class ActivityMapComponent implements OnInit {
     for(let i = 0; i < this.activitySettingsChanges.length; ++i) {
       const activitySettingsChange$ = this.activitySettingsChanges[i];
       activitySettingsChange$.pipe(
-        takeUntil(this.destroyed)
+        takeUntil(this.changed),
+        takeUntil(this.destroyed),
+        delay(0), // bad hack to cause map size updating to occur after the container element is resized
       ).subscribe(
         activitySettings => {
           this.updateActivitySettings(activitySettings, i);
-          this.map.getView().fit(this.lineStringLayerSource.getExtent(), {
-            padding: [32, 32, 32, 32],
-          });
+          this.map.updateSize();
+          this.fitBounds();
         }
       );
     }
@@ -112,6 +122,12 @@ export class ActivityMapComponent implements OnInit {
     let lineString = this.lineStrings[index];
 
     lineString.getGeometry().setCoordinates(coordinates);
+  }
+
+  fitBounds() {
+    this.map.getView().fit(this.lineStringLayerSource.getExtent(), {
+      padding: [32, 32, 32, 32],
+    });
   }
 
 }
