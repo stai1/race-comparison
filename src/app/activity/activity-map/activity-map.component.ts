@@ -32,11 +32,15 @@ export class ActivityMapComponent implements OnInit {
   @ViewChild('map')
   private mapElement: ElementRef<HTMLDivElement>;
 
+  private activitySettingsList: ActivitySettings[];
+
   private map: OlMap;
 
   private destroyed = new Subject<void>();
 
-  lineStrings: Feature<LineString>[];
+  private lineStrings: Feature<LineString>[];
+
+  private lineStringLayerSource: VectorSource<Geometry> = new VectorSource({wrapX: true});
 
   constructor() { }
 
@@ -45,6 +49,7 @@ export class ActivityMapComponent implements OnInit {
 
   ngAfterViewInit(): void {
     this.initMap();
+    this.initActivitySettings();
     this.observeActivitySettingsChanges();
   }
 
@@ -52,27 +57,13 @@ export class ActivityMapComponent implements OnInit {
     this.destroyed.next();
   }
 
-  observeActivitySettingsChanges(): void {
-    for(let i = 0; i < this.activitySettingsChanges.length; ++i) {
-      const activitySettingsChange$ = this.activitySettingsChanges[i];
-      activitySettingsChange$.pipe(
-        takeUntil(this.destroyed)
-      ).subscribe(
-        activitySettings => {
-          this.updateActivitySettings(activitySettings, i);
-        }
-      );
-    }
-  }
-
   initMap(): void {
     const mapSource = new OSM();
-    const lineStringLayerSource = new VectorSource({wrapX: true});
     this.map = new OlMap({
       target: this.mapElement.nativeElement,
       layers: [
         new TileLayer({source: mapSource}),
-        new VectorLayer({ source: lineStringLayerSource }),
+        new VectorLayer({ source: this.lineStringLayerSource }),
       ],
       view: new View({
         center: fromLonLat([0,0]),
@@ -87,13 +78,37 @@ export class ActivityMapComponent implements OnInit {
     this.lineStrings.forEach(
       lineString => lineString.setStyle(LINE_STYLE)
     );
-    lineStringLayerSource.addFeatures(this.lineStrings);
+    this.lineStringLayerSource.addFeatures(this.lineStrings);
+  }
+
+  initActivitySettings() {
+    // initialize activity settings array with length of number of activities
+    this.activitySettingsList = this.activitySettingsChanges.map(() => null);
+  }
+
+  observeActivitySettingsChanges(): void {
+    for(let i = 0; i < this.activitySettingsChanges.length; ++i) {
+      const activitySettingsChange$ = this.activitySettingsChanges[i];
+      activitySettingsChange$.pipe(
+        takeUntil(this.destroyed)
+      ).subscribe(
+        activitySettings => {
+          this.updateActivitySettings(activitySettings, i);
+          this.map.getView().fit(this.lineStringLayerSource.getExtent(), {
+            padding: [32, 32, 32, 32],
+          });
+        }
+      );
+    }
   }
 
   updateActivitySettings(activitySettings: ActivitySettings, index: number) {
-    const coordinates = activitySettings.activity.points.map(
-      point => fromLonLat([point.lon, point.lat])
-    );
+    this.activitySettingsList[index] = activitySettings;
+    const coordinates = activitySettings.activity.points
+      .slice(activitySettings.startTimeOffset, activitySettings.endTimeOffset + 1)
+      .map(
+        point => fromLonLat([point.lon, point.lat])
+      );
     let lineString = this.lineStrings[index];
 
     lineString.getGeometry().setCoordinates(coordinates);

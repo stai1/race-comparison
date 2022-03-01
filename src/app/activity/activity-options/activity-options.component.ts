@@ -26,7 +26,9 @@ export class ActivityOptionsComponent implements OnInit {
     fileReader.onload = event => {
       this.activity = this.loadRoute(event.target.result as string, file.name.split('.').pop());
       this.activitySettingsChange.emit({
-        activity: this.activity
+        activity: this.activity,
+        startTimeOffset: 0, // TODO: implement startTimeOffset control
+        endTimeOffset: this.activity.points.length - 1, // TODO: implement endTimeOffset control
       });
     }
     fileReader.readAsText(file);
