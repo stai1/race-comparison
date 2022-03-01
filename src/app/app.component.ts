@@ -8,10 +8,13 @@ import { ActivitySettings } from "./activity/activity-settings";
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  title='race-comparison';
 
-  private activitySettingsChangeSubjects = [
-    new BehaviorSubject<ActivitySettings>(null),
-  ];
+  private numActivities = 3;
+
+  private activitySettingsChangeSubjects = Array(this.numActivities).fill(undefined).map(
+    () => new BehaviorSubject<ActivitySettings>(null),
+  );
 
   activitySettingsChanges = this.activitySettingsChangeSubjects.map(
     subject => {
@@ -21,7 +24,7 @@ export class AppComponent {
     }
   );
 
-  onLeftActivitySettingsChange(activitySettingsChange: ActivitySettings) {
-    this.activitySettingsChangeSubjects[0].next(activitySettingsChange);
+  onActivitySettingsChange(activitySettingsChange: ActivitySettings, index: number) {
+    this.activitySettingsChangeSubjects[index].next(activitySettingsChange);
   }
 }

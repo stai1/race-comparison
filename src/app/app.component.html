@@ -1,8 +1,16 @@
 <div class="layout">
-  <div class="activity-options">
-    <app-activity-options (activitySettingsChange)="onLeftActivitySettingsChange($event)"></app-activity-options>
+  <div class="left">
+    <div class="maps">
+      <div class='activity-map single'>
+        <app-activity-map [activitySettingsChanges]="activitySettingsChanges"></app-activity-map>
+      </div>
+    </div>
+    <div class="charts">
+    </div>
   </div>
-  <div class='activity-map single'>
-    <app-activity-map [activitySettingsChanges]="activitySettingsChanges"></app-activity-map>
+  <div class="right">
+    <div *ngFor="let activitySettingsChange$ of activitySettingsChanges; let i = index" class="activity-options">
+      <app-activity-options (activitySettingsChange)="onActivitySettingsChange($event, i)"></app-activity-options>
+    </div>
   </div>
 </div>

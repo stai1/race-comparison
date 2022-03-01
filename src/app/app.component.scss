@@ -1,18 +1,37 @@
 .layout {
   width: 100%;
   height: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
+  display: flex;
 
-  .activity-options {
-    grid-row: 1;
+  .left {
+    height: 100%;
+    flex-grow: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    .maps {
+      flex-grow: 1;
+      display: flex;
+      .activity-map {
+        flex-grow: 1;
+      }
+    }
+
+    .charts {
+      height: 300px;
+    }
+
   }
-  .activity-map {
-    grid-row: 2;
 
-    &.single {
-      grid-column: span 2;
+  .right {
+    width: 300px;
+    .activity-options {
+      padding: 10px;
+  
+      &:not(.activity-options:last-of-type) {
+        border-right: 1px solid black;
+      }
     }
   }
 }

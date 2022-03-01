@@ -21,15 +21,16 @@ export class ActivityOptionsComponent implements OnInit {
   }
 
   onFileSelected(event: Event) {
-    const file = (<HTMLInputElement> event.target).files[0]
+    const file = (<HTMLInputElement> event.target).files[0];
     const fileReader = new FileReader();
-    fileReader.onload = event => {
-      this.activity = this.loadRoute(event.target.result as string, file.name.split('.').pop());
+    fileReader.onload = progressEvent => {
+      this.activity = this.loadRoute(progressEvent.target.result as string, file.name.split('.').pop());
       this.activitySettingsChange.emit({
         activity: this.activity,
         startTimeOffset: 0, // TODO: implement startTimeOffset control
         endTimeOffset: this.activity.points.length - 1, // TODO: implement endTimeOffset control
       });
+      (<HTMLInputElement> event.target).value = '';
     }
     fileReader.readAsText(file);
   }
