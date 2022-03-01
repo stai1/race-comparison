@@ -88,33 +88,45 @@ export class ActivityOptionsComponent implements OnInit {
     const rawPoints = rawActivity.points;
     const points: ActivityPoint[] = [];
 
-    points.push({
-      ...rawPoints[0],
-      calculatedDistance: 0,
-      calculatedSpeed: 0,
-    });
-    for(let i = 1; i < rawPoints.length; ++i) {
-      const rawPoint = rawPoints[i];
-      const previousPoint = points[points.length - 1];
+    let cumDistance = 0; // updated to next point at end of loop
+    let lastSpeed = 0; // updated before inserting points
+    for(let t = 0, i = 0;/* break in loop */; ++i) {
+      let curPoint = rawPoints[i];
+      const nextPoint = rawPoints[i + 1];
+      if(!nextPoint) {
+        points.push({
+          ...curPoint,
+          calculatedDistance: cumDistance,
+          calculatedSpeed: lastSpeed,
+        });
+        break;
+      }
 
-      let distanceChange = this.distanceBetweenPoints(rawPoint, previousPoint);
-      let timeChange = rawPoint.timeSinceStart - previousPoint.timeSinceStart;
-      let speed = distanceChange/timeChange;
+      let distanceChange = this.distanceBetweenPoints(nextPoint, curPoint);
+      let timeChange = nextPoint.timeSinceStart - curPoint.timeSinceStart;
+      lastSpeed = distanceChange/timeChange;
 
-      // update previous point speed such that it results in the current point location
-      previousPoint.calculatedSpeed = speed;
+      // add point for each second until next point
+      // linearly interpolate coordinates
+      for(let tAheadCurPoint = 0; tAheadCurPoint < timeChange; ++tAheadCurPoint) {
+        points.push({
+          ...curPoint,
+          timeSinceStart: t,
+          lon: (curPoint.lon * (timeChange - tAheadCurPoint) + nextPoint.lon * tAheadCurPoint) / timeChange,
+          lat: (curPoint.lat * (timeChange - tAheadCurPoint) + nextPoint.lat * tAheadCurPoint) / timeChange,
+          calculatedDistance: cumDistance + distanceChange * tAheadCurPoint/timeChange,
+          calculatedSpeed: lastSpeed,
+        });
+        ++t;
+      }
 
-      points.push({
-        ...rawPoint,
-        calculatedDistance: previousPoint.calculatedDistance + distanceChange,
-        calculatedSpeed: speed, // reuse previous point speed; prevents last point from having 0 speed
-      });
+      cumDistance += distanceChange;
     }
 
     return {
       name: rawActivity.name,
       points: points,
-    }
+    };
   }
 
   private distanceBetweenPoints(point1: RawActivityPoint, point2: RawActivityPoint): number {
